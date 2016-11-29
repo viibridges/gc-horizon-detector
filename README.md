@@ -1,5 +1,6 @@
 ## gc-horizon-detector
-Source code of paper, [Detecting Vanishing Points using Global Image Context in a Non-Manhattan World](http://cs.uky.edu/~ted//assets/pdfs/fasthor.pdf).
+This repo contains the source code of paper, [Detecting Vanishing Points using Global Image Context in a Non-Manhattan World](http://www.cv-foundation.org/openaccess/content_cvpr_2016/papers/Zhai_Detecting_Vanishing_Points_CVPR_2016_paper.pdf).
+And you can find more details in our [Project Page](http://cs.uky.edu/~ted/research/fasthorizon/)
 
 ##Installation:
   1. Install Caffe and compile Matcaffe (see toturial at [Caffe Installation](http://caffe.berkeleyvision.org/installation.html)).
