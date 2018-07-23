@@ -1,36 +1,20 @@
 function [ortho_horlines_homo, infiniteVP_homo] = sample_horlines_from_deep(xres, yres, focal, deep, opt)
 
-
-%
-% sample horizon line
-%
+sz = deep.sz;
+config = deep.config;
+crop_data = deep.crop_data;
 
 Nsamples = opt.NhorizonCandidates;
-Nbins = numel(deep.offset_bins);
-radius = deep.radius;
 rng(1) % fix random seed
 
-% horizon candidates as [left, right] height
-lefts = nan(Nsamples, 1);
-rights = nan(Nsamples, 1);
-
-delta_theta = range(atan(deep.offset_range/radius));
-min_theta = min(atan(deep.offset_range/radius));
-
+slope_binIds = random(deep.slope_bin_gaussian_model, Nsamples, 1);
 offset_binIds = random(deep.offset_bin_gaussian_model, Nsamples, 1);
-offsets = tan(delta_theta * offset_binIds/(Nbins-1) + min_theta) * radius;
-
-tilt_binIds = random(deep.tilt_bin_gaussian_model, Nsamples, 1);
-tilts = pi * tilt_binIds/(Nbins-1) - pi/2;
-
+lefts = nan(Nsamples,1); rights = nan(Nsamples,1);
 for ix = 1:Nsamples
-
-  tilt = tilts(ix);
-  offset = offsets(ix);
-  
-  [lefts(ix), rights(ix)] = regress_to_horizon([tilt, offset], xres, yres,...
-    deep.base_xres, deep.base_yres, Nbins, radius);
-  
+  slope = bin2val(slope_binIds(ix), config.slope_bin_edges);
+  offset = bin2val(offset_binIds(ix), config.offset_bin_edges);
+  [o_l, o_r] = parse_caffe_output(slope, offset, config, sz, crop_data);
+  lefts(ix) = sz(1)/2 - o_l(2); rights(ix) = sz(1)/2 - o_r(2);
 end
 
 % filter unlikely horizon lines
@@ -44,7 +28,6 @@ rights = rights(validIds);
 % sort and unique
 [lefts, sortId] = unique(lefts);
 rights = rights(sortId);
-
 
 %
 % [lefts, rights] -> homogeneous space

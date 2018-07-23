@@ -1,39 +1,46 @@
 function deep = extract_context_with_cnn(im, net)
 
-crop_size = 256;
-pixel_mean = 115; % can't use mean file in matcaffe
+sz = size(im);
+sz = sz(1:2);
 
-im_resized = imresize(im, [crop_size, crop_size]); % resize
-im_mean = double(im_resized) - pixel_mean;         % center
-caffe_im = single(permute(im_mean(:,:,[3,2,1]), [2,1,3]));
+% setup parameters for cnn
+config = horizon_setup();
+crop_data = prepare_image(config, im, sz);
 
-out = net.forward({caffe_im});
-slope_bins = out{1};
-offset_bins = out{2};
+% deploy net
+net.blobs('data').reshape([config.caffe_sz, 3, 1]);
+net.blobs('data').set_data(crop_data.caffe_input);
+net.forward_prefilled();
+slope_dist = net.blobs('prob_slope').get_data;
+offset_dist = net.blobs('prob_offset').get_data;
 
-%
-% detect horizon line
-%
-xres = size(im, 2);
-yres = size(im, 1);
+% net outputs to horizon line 
+[~, slope_max_bin] = max(slope_dist);
+[~, offset_max_bin] = max(offset_dist);
+slope = bin2val(slope_max_bin, config.slope_bin_edges);
+offset = bin2val(offset_max_bin, config.offset_bin_edges);
+[o_l, o_r] = parse_caffe_output(slope, offset, config, sz, crop_data);
+l = [sz(2)/2+o_l(1), sz(1)/2-o_l(2)]; 
+r = [sz(2)/2+o_r(1), sz(1)/2-o_r(2)]; 
 
-% cnn horizon line
-radius = crop_size / 5;
-offset_range = [-Inf, Inf];
-Nbins = numel(slope_bins);
-[~, slope_bin] = max(slope_bins); slope_bin = slope_bin - 1;
-[~, offset_bin] = max(offset_bins); offset_bin = offset_bin - 1;
-[l, r] = class_to_horizon([slope_bin, offset_bin], xres, yres, crop_size, crop_size, Nbins, radius, offset_range);
+% figure(12);clf
+% image(im)
+% hold on
+% plot([l(1) r(1)], [l(2) r(2)], 'y--', 'linewidth', 2)
+% hold off
+% axis off equal
+% drawnow
 
 % process deep network predictions
 deep = struct();
-deep.tilt_bins = slope_bins;
-deep.offset_bins = offset_bins;
-deep.base_xres = crop_size;
-deep.base_yres = crop_size;
-deep.radius = deep.base_yres / 5;
-deep.tilt_bin_gaussian_model = hist2gaussian_model(deep.tilt_bins);
-deep.offset_bin_gaussian_model = hist2gaussian_model(deep.offset_bins);
-deep.offset_range = [-Inf, Inf];
-deep.left_cnn = [0 l];
-deep.right_cnn = [xres r];
+deep.config = config;
+deep.crop_data = rmfield(crop_data, {'c_im', 'caffe_input'});
+deep.sz = sz(1:2);
+deep.slope_dist = slope_dist;
+deep.offset_dist = offset_dist;
+deep.slope = slope;
+deep.offset = offset;
+deep.slope_bin_gaussian_model = hist2gaussian_model(slope_dist);
+deep.offset_bin_gaussian_model = hist2gaussian_model(offset_dist);
+deep.left_cnn = l;
+deep.right_cnn = r;

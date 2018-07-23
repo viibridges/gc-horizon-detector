@@ -1,39 +1,23 @@
 function [ortho_horlines_homo, infiniteVP_homo] = sample_orthogonal_horlines_from_deep(zenith_homo, xres, yres, focal, deep, opt)
 
-
-%
-% sample horizon line
-%
+sz = deep.sz;
+config = deep.config;
+crop_data = deep.crop_data;
 
 Nsamples = opt.NhorizonCandidates;
-Nbins = numel(deep.offset_bins);
-radius = deep.radius;
 rng(1) % fix random seed
 
-% find tilt in small image from zenith
+% recover slope from zenith homo
 x = zenith_homo(1)/zenith_homo(3) - opt.pp(1)/focal; 
 y = zenith_homo(2)/zenith_homo(3) - opt.pp(2)/focal;
-resize_scale = deep.base_yres * xres / deep.base_xres / yres;
-tilt = atan(x/y * resize_scale); % just some math
-
-
-% horizon candidates as [left, right] height
-lefts = nan(Nsamples, 1);
-rights = nan(Nsamples, 1);
-
-delta_theta = range(atan(deep.offset_range/radius));
-min_theta = min(atan(deep.offset_range/radius));
+slope = atan(x/y);
 
 offset_binIds = random(deep.offset_bin_gaussian_model, Nsamples, 1);
-offsets = tan(delta_theta * offset_binIds/(Nbins-1) + min_theta) * radius;
-
+lefts = nan(Nsamples,1); rights = nan(Nsamples,1);
 for ix = 1:Nsamples
-  
-  offset = offsets(ix);
-  
-  [lefts(ix), rights(ix)] = regress_to_horizon([tilt, offset], xres, yres,...
-    deep.base_xres, deep.base_yres, Nbins, radius);
-  
+  offset = bin2val(offset_binIds(ix), config.offset_bin_edges);
+  [o_l, o_r] = parse_caffe_output(slope, offset, config, sz, crop_data);
+  lefts(ix) = sz(1)/2 - o_l(2); rights(ix) = sz(1)/2 - o_r(2);
 end
 
 % filter unlikely horizon lines
@@ -47,7 +31,6 @@ rights = rights(validIds);
 % sort and unique
 [lefts, sortId] = unique(lefts);
 rights = rights(sortId);
-
 
 %
 % [lefts, rights] -> homogeneous space

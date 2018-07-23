@@ -10,8 +10,12 @@ Nsamples = 5000;
 [~, samples] = histc(rand(Nsamples,1), cdf);
 
 model = fitdist(samples, 'Normal');
-
 model = truncate(model, 1, numel(bins)); % truncate the model
+
+% if we get a dirac distribution, degrade it to a discrete distribution
+if model.sigma == 0
+  model = makedist('Binomial','N',1,'p',1);
+end
 
 % %
 % % visualize

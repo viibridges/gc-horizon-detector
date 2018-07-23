@@ -17,17 +17,17 @@ LSD_BIN_ = 'assets/lsd/lsd';
 
 disp('loading network...')
 caffe.reset_all();
-caffe.set_mode_cpu(); % change it to gpu mode if want to accelerate context extraction
-net = caffe.Net('assets/caffe/deploy.net', 'assets/caffe/streetview.caffemodel', 'test');
+caffe.set_mode_cpu();
+net = caffe.Net('assets/caffe_dh/deploy.net', 'assets/caffe_dh/googlenet_places.caffemodel', 'test');
 
-for ix = 1:N
+for ix = 1:N 
   %
   % extract line segments
   %
   im = imread(imageList{ix});
   [seglines, temp_dir] =  extract_linesegment(im, LSD_BIN_);
   fprintf('extracting LS: %d / %d\n', ix, N);
-  
+
   %
   % extract context with CNN
   %

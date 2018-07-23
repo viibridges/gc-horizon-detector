@@ -5,7 +5,7 @@ rng(1) % fix random seed
 
 %% dealing with options
 if ~exist('opt', 'var')
-  opt=default_option();
+  default_option
 end
 
 
@@ -25,32 +25,11 @@ else
 end
 
 
-if strcmp(opt.sampling_method, 'linear')
-  %
-  % zenith VP as constraint, horizon candidates' offsets sampled from image
-  % space uniformly
-  %
-  [ortho_horlines_homo, infiniteVPs_homo] = sample_orthogonal_horlines(zeniths_homo, xres, yres, focal, opt);
-  
-elseif strcmp(opt.sampling_method, 'uniform')  
-  %
-  % zenith VP as constraint, horizon candidates' offsets sampled from image
-  % space uniformly
-  %
-  [ortho_horlines_homo, infiniteVPs_homo] = sample_orthogonal_horlines_uniform(zeniths_homo, xres, yres, focal, opt);
-  
-elseif strcmp(opt.sampling_method, 'hybrid')
+if strcmp(opt.sampling_method, 'hybrid')
   %
   % zenith VP as constraint, horizon candidates' offsets sampled from deep network
   %
   [ortho_horlines_homo, infiniteVPs_homo] = sample_orthogonal_horlines_from_deep(zeniths_homo, xres, yres, focal, deep, opt);
-  
-elseif strcmp(opt.sampling_method, 'grid')
-  %
-  % try the given horizon lines
-  %
-  ortho_horlines_homo = img2homo(opt.grid.horizon_candidates, xres, yres, focal);
-  infiniteVPs_homo = lines_normal(ortho_horlines_homo);
   
 else
   %
@@ -90,6 +69,14 @@ for i = 1:size(ortho_horlines_homo,2)
   
 end
 
+
+%% if no candidates are found (usually due to the insufficient amount of LSs), return empty stuff
+if isempty(candidates)
+  horizon_homo = [0;0;1];
+  stat = nan;
+  fprintf('no horizon line cadidates are found.\n');
+  return;
+end
 
 %% decide the horizon line
 horCandidateScores = [candidates.sc];
