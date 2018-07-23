@@ -3,7 +3,7 @@
 %
 
 addpath util
-addpath ~/Software/caffe/matlab % Change it to your matcaffe path
+addpath /path/to/caffe/matlab  % Change it to your matcaffe path
 
 imgDir = 'assets/imgs/';  % directory of input images
 outDir = 'outputs/';      % directory for storing results
