@@ -3,7 +3,7 @@ function config = horizon_setup()
 config = struct();
 
 % parameterization settings
-tmp = load('assets/caffe_dh/cdf/bins.mat');
+tmp = load('assets/models/bins.mat');
 config.num_bins = tmp.num_bins;
 config.slope_bin_edges = tmp.slope_bin_edges;
 config.offset_bin_edges = tmp.offset_bin_edges;

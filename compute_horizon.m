@@ -18,7 +18,7 @@ LSD_BIN_ = 'assets/lsd/lsd';
 disp('loading network...')
 caffe.reset_all();
 caffe.set_mode_cpu();
-net = caffe.Net('assets/caffe_dh/deploy.net', 'assets/caffe_dh/googlenet_places.caffemodel', 'test');
+net = caffe.Net('assets/models/deploy.net', 'assets/models/googlenet_places.caffemodel', 'test');
 
 for ix = 1:N 
   %
