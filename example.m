@@ -9,7 +9,6 @@ imgDir = 'assets/imgs/';  % directory of input images
 outDir = 'outputs/';      % directory for storing results
 
 imgList = glob([imgDir, '*.jpg']);
-nImages = numel(imgList);
 
 % get default configuration
 opt = default_option();
